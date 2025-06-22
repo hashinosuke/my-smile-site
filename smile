@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>笑顔を見つけよう！</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f9ff; /* Light blue background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .question-text {
+            font-size: 1.75rem; /* text-3xl */
+            font-weight: 600; /* font-semibold */
+            color: #334155; /* slate-700 */
+            margin-bottom: 20px;
+        }
+        .option-button {
+            background-color: #6366f1; /* indigo-500 */
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 500; /* font-medium */
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            width: 100%;
+            border: none;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .option-button:hover {
+            background-color: #4f46e5; /* indigo-600 */
+            transform: translateY(-2px);
+        }
+        .option-button:active {
+            background-color: #4338ca; /* indigo-700 */
+            transform: translateY(0);
+        }
+        .video-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        .video-display .video-wrapper {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        .video-display .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .restart-button {
+            background-color: #ef4444; /* red-500 */
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            border: none;
+        }
+        .restart-button:hover {
+            background-color: #dc2626; /* red-600 */
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="container">
+        <!-- Content will be rendered here by JavaScript -->
+    </div>
+
+    <script>
+        // データ構造: 質問、選択肢、最終的な動画パスを定義
+        const appData = {
+            questions: [
+                {
+                    id: 'q1',
+                    text: 'あなたは今何を求めていますか？',
+                    options: [
+                        { value: 'healing', text: '癒し', next: 'q2_healing' },
+                        { value: 'funny', text: '面白い', next: 'q2_funny' },
+                        { value: 'energetic', text: '元気', next: 'q2_energetic' },
+                        { value: 'moving', text: '感動', next: 'q2_moving' }
+                    ]
+                },
+                {
+                    id: 'q2_healing',
+                    text: 'どのような「癒し」を求めていますか？',
+                    options: [
+                        { value: 'animals', text: '動物', next: 'q3_animals_healing' },
+                        { value: 'nature', text: '自然', next: 'q3_nature_healing' },
+                        { value: 'food', text: '食べ物', next: 'q3_food_healing' },
+                        { value: 'scenery', text: '景色', next: 'q3_scenery_healing' }
+                    ]
+                },
+                {
+                    id: 'q3_animals_healing',
+                    text: 'どんな動物が良いですか？',
+                    options: [
+                        { value: 'fluffy', text: 'もふもふ', next: 'q4_fluffy_animals' },
+                        { value: 'cute_eyes', text: 'つぶらな瞳', next: 'video_cute_eyes' },
+                        { value: 'playful', text: 'やんちゃ', next: 'video_playful_animal' },
+                        { value: 'relaxed', text: 'のんびり', next: 'video_relaxed_animal' }
+                    ]
+                },
+                {
+                    id: 'q4_fluffy_animals',
+                    text: '特にどの動物のもふもふが良いですか？',
+                    options: [
+                        { value: 'dog', text: '犬', next: 'video_samoyed' },
+                        { value: 'cat', text: '猫', next: 'video_fluffy_cat' },
+                        { value: 'rabbit', text: 'うさぎ', next: 'video_fluffy_rabbit' },
+                        { value: 'other', text: 'その他', next: 'video_other_fluffy' }
+                    ]
+                },
+                // 面白い (Funny) のパス
+                {
+                    id: 'q2_funny',
+                    text: 'どのような「面白さ」を求めていますか？',
+                    options: [
+                        { value: 'people', text: '人', next: 'q3_funny_people' },
+                        { value: 'animals', text: '動物', next: 'video_funny_animal' },
+                        { value: 'objects', text: 'モノ', next: 'video_funny_object' },
+                        { value: 'incidents', text: 'ハプニング', next: 'video_funny_incident' }
+                    ]
+                },
+                {
+                    id: 'q3_funny_people',
+                    text: '特にどのような人の面白さですか？',
+                    options: [
+                        { value: 'children', text: '子供', next: 'video_funny_kid' },
+                        { value: 'adults', text: '大人', next: 'video_funny_adult' },
+                        { value: 'funny_faces', text: '変顔', next: 'video_funny_face' },
+                        { value: 'pranks', text: 'ドッキリ', next: 'video_prank' }
+                    ]
+                },
+                // 元気 (Energetic) のパス
+                {
+                    id: 'q2_energetic',
+                    text: 'どんな「元気」が欲しいですか？',
+                    options: [
+                        { value: 'sports_energetic', text: 'スポーツ', next: 'q3_sports_energetic' },
+                        { value: 'music_energetic', text: '音楽', next: 'video_energetic_music' },
+                        { value: 'action_energetic', text: 'アクション', next: 'video_energetic_action' },
+                        { value: 'challenge_energetic', text: '挑戦', next: 'video_energetic_challenge' }
+                    ]
+                },
+                {
+                    id: 'q3_sports_energetic',
+                    text: 'どのスポーツが良いですか？',
+                    options: [
+                        { value: 'team_sports', text: 'チームスポーツ', next: 'video_team_sports_energetic' },
+                        { value: 'individual_sports', text: '個人スポーツ', next: 'video_individual_sports_energetic' }
+                    ]
+                },
+                // 感動 (Moving) のパス
+                {
+                    id: 'q2_moving',
+                    text: 'どんな「感動」を求めていますか？',
+                    options: [
+                        { value: 'human_connection_moving', text: '絆', next: 'video_human_connection_moving' },
+                        { value: 'nature_beauty_moving', text: '自然の美しさ', next: 'video_nature_beauty_moving' },
+                        { value: 'effort_result_moving', text: '努力の成果', next: 'video_effort_result_moving' },
+                        { value: 'small_happiness_moving', text: '日常の小さな幸せ', next: 'video_small_happiness_moving' }
+                    ]
+                },
+                // 自然 (Nature) の癒しパス
+                {
+                    id: 'q3_nature_healing',
+                    text: 'どんな自然の癒しが良いですか？',
+                    options: [
+                        { value: 'grand_nature', text: '壮大な景色', next: 'q4_grand_nature' },
+                        { value: 'calm_nature', text: '穏やかな風景', next: 'video_calm_nature' }
+                    ]
+                },
+                {
+                    id: 'q4_grand_nature',
+                    text: '特にどのような壮大な景色が良いですか？',
+                    options: [
+                        { value: 'mountains', text: '山', next: 'video_grand_mountains' },
+                        { value: 'ocean', text: '海', next: 'video_grand_ocean' }
+                    ]
+                },
+                // 食べ物 (Food) の癒しパス
+                {
+                    id: 'q3_food_healing',
+                    text: 'どんな食べ物で癒されたいですか？',
+                    options: [
+                        { value: 'sweets', text: 'スイーツ', next: 'video_sweets' },
+                        { value: 'comfort_food', text: 'ほっとする料理', next: 'video_comfort_food' }
+                    ]
+                },
+                // 景色 (Scenery) の癒しパス
+                {
+                    id: 'q3_scenery_healing',
+                    text: 'どんな景色で癒されたいですか？',
+                    options: [
+                        { value: 'urban_night', text: '都会の夜景', next: 'video_urban_night' },
+                        { value: 'rural_day', text: '田舎の昼下がり', next: 'video_rural_day' }
+                    ]
+                }
+            ],
+            // 最終的に表示される動画データ（YouTube埋め込みURLをここに設定）
+            videos: {
+                'video_samoyed': { url: 'https://www.youtube.com/embed/wDtxHgRq-qk', alt: '笑顔のサモエド犬の動画' },
+                'video_fluffy_cat': { url: 'https://www.youtube.com/embed/_NccvcjDDB4', alt: 'もふもふの猫の動画' },
+                'video_fluffy_rabbit': { url: 'https://www.youtube.com/embed/A5k7vNDRA10', alt: 'もふもふのうさぎの動画' },
+                'video_other_fluffy': { url: 'https://www.youtube.com/embed/-ygBNCvq0JU', alt: '他のもふもふ動物の動画' },
+                'video_cute_eyes': { url: 'https://www.youtube.com/embed/kifSCWKZdeA', alt: 'つぶらな瞳の動物の動画' },
+                'video_playful_animal': { url: 'https://www.youtube.com/embed/bxKeNF7RFys', alt: 'やんちゃな動物の動画' },
+                'video_relaxed_animal': { url: 'https://www.youtube.com/embed/PQ6cdZ_7xGA', alt: 'のんびりした動物の動画' },
+                'video_funny_animal': { url: 'https://www.youtube.com/embed/UJ3tZKy7igQ', alt: '面白い動物の動画' },
+                'video_funny_kid': { url: 'https://www.youtube.com/embed/I25iqPHxocI', alt: '面白い子供の動画' },
+                'video_funny_adult': { url: 'https://www.youtube.com/embed/HCfIsa6M-4o', alt: '面白い大人の動画' },
+                'video_funny_face': { url: 'https://www.youtube.com/embed/j3-KLorIDLg', alt: '変顔の動画' },
+                'video_prank': { url: 'https://www.youtube.com/embed/HdcCRp9OL-s', alt: 'ドッキリの動画' },
+                'video_funny_object': { url: 'https://www.youtube.com/embed/p7uzURiIFPM', alt: '面白いモノの動画' },
+                'video_funny_incident': { url: 'https://www.youtube.com/embed/7DFiX-3m2ps', alt: '面白いハプニングの動画' },
+                'video_grand_mountains': { url: 'https://www.youtube.com/embed/Ueef-n2VyiU', alt: '壮大な山の景色の動画' },
+                'video_grand_ocean': { url: 'https://www.youtube.com/embed/SVmLsAan3Jk', alt: '壮大な海の景色の動画' },
+                'video_calm_nature': { url: 'https://www.youtube.com/embed/qwYYD5H13A8', alt: '穏やかな自然の景色の動画' },
+                'video_sweets': { url: 'https://www.youtube.com/embed/9S6WI_Qrhbs', alt: '美味しそうなスイーツの動画' },
+                'video_comfort_food': { url: 'https://www.youtube.com/embed/FB9d3u-wYiI', alt: 'ほっとする料理の動画' },
+                'video_urban_night': { url: 'https://www.youtube.com/embed/iQXE9x8Ux48', alt: '都会の夜景の動画' },
+                'video_rural_day': { url: 'https://www.youtube.com/embed/y_eZNckIBHY', alt: '田舎の昼下がり動画' },
+                'video_team_sports_energetic': { url: 'https://www.youtube.com/embed/Z42Lro8SYR8', alt: 'チームスポーツの盛り上がりの動画' },
+                'video_individual_sports_energetic': { url: 'https://www.youtube.com/embed/cdIWkMzenXQ', alt: '個人スポーツの感動の動画' },
+                'video_energetic_music': { url: 'https://www.youtube.com/embed/R38vqeT5-EA', alt: '元気が出る音楽の動画' },
+                'video_energetic_action': { url: 'https://www.youtube.com/embed/JMJVt9oqSYc', alt: '躍動感あるアクションシーンの動画' },
+                'video_energetic_challenge': { url: 'https://www.youtube.com/embed/LiNZ9IqIkFY', alt: '挑戦を乗り越えた喜びの動画' },
+                'video_human_connection_moving': { url: 'https://www.youtube.com/embed/WwLETZhbKfQ', alt: '絆を感じる動画' },
+                'video_nature_beauty_moving': { url: 'https://www.youtube.com/embed/-TnYNoOrRdw', alt: '自然の感動的な美しさの動画' },
+                'video_effort_result_moving': { url: 'https://www.youtube.com/embed/ZLGdK77T8HM', alt: '努力が実った瞬間の動画' },
+                'video_small_happiness_moving': { url: 'https://www.youtube.com/embed/61FeRGHms4w', alt: '日常の小さな幸せを感じる動画' }
+            }
+        };
+
+        let currentQuestionId = 'q1'; // 現在の質問IDを保持する変数
+        const appElement = document.getElementById('app'); // アプリケーションのルート要素
+
+        /**
+         * 質問を表示する関数
+         * @param {string} questionId - 表示する質問のID
+         */
+        function renderQuestion(questionId) {
+            // appData.questions から該当する質問を見つける
+            const question = appData.questions.find(q => q.id === questionId);
+
+            // 質問が見つからない場合はエラーまたは何らかの処理
+            if (!question) {
+                console.error('質問が見つかりませんでした:', questionId);
+                return;
+            }
+
+            // HTMLコンテンツを生成
+            let htmlContent = `
+                <p class="question-text">${question.text}</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            `;
+            // 各選択肢のボタンを生成
+            question.options.forEach(option => {
+                htmlContent += `
+                    <button class="option-button" onclick="handleAnswer('${option.next}')">
+                        ${option.text}
+                    </button>
+                `;
+            });
+            htmlContent += `</div>`;
+            appElement.innerHTML = htmlContent; // ルート要素にHTMLを挿入
+        }
+
+        /**
+         * 最終的な動画を表示する関数
+         * @param {string} videoId - 表示する動画のID
+         */
+        function renderVideo(videoId) {
+            // appData.videos から該当する動画データを見つける
+            const videoData = appData.videos[videoId];
+
+            // 動画データが見つからない場合はエラーまたは何らかの処理
+            if (!videoData) {
+                console.error('動画データが見つかりませんでした:', videoId);
+                return;
+            }
+
+            // HTMLコンテンツを生成 (YouTube埋め込み用のiframeを使用)
+            const htmlContent = `
+                <div class="video-display">
+                    <p class="question-text">あなたを笑顔にする動画はこちら！</p>
+                    <div class="video-wrapper">
+                        <iframe
+                            src="${videoData.url}"
+                            title="${videoData.alt}"
+                            frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowfullscreen
+                        ></iframe>
+                    </div>
+                    <button class="restart-button mt-4" onclick="restartQuiz()">
+                        もう一度試す
+                    </button>
+                </div>
+            `;
+            appElement.innerHTML = htmlContent; // ルート要素にHTMLを挿入
+        }
+
+        /**
+         * 回答が選択されたときに呼び出される関数
+         * @param {string} nextId - 次の質問IDまたは動画ID
+         */
+        function handleAnswer(nextId) {
+            // もし nextId が 'video_' で始まる場合、それは動画ID
+            if (nextId.startsWith('video_')) {
+                renderVideo(nextId); // 動画を表示
+            } else {
+                currentQuestionId = nextId; // 次の質問IDを更新
+                renderQuestion(currentQuestionId); // 次の質問を表示
+            }
+        }
+
+        /**
+         * クイズを最初からやり直す関数
+         */
+        function restartQuiz() {
+            currentQuestionId = 'q1'; // 最初の質問IDに戻す
+            renderQuestion(currentQuestionId); // 最初の質問を表示
+        }
+
+        // ページロード時に最初の質問を表示
+        document.addEventListener('DOMContentLoaded', () => {
+            renderQuestion(currentQuestionId);
+        });
+    </script>
+</body>
+</html>
