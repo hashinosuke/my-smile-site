@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>土師野隆之介の人生すごろく 〜挑戦と笑いの22年〜</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Kaisei+Decol&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals & Soft Blue -->
+    <!-- Application Structure Plan: A single-page, vertical scrolling application designed as a "sugoroku" (Japanese board game) path. The structure is chronological, divided into four thematic chapters to provide narrative structure to the 22-year journey. Key interactions include scrolling to follow the path, and clicking to open a modal with details. This structure was chosen because it directly mimics the "sugoroku" concept, turning a linear life story into an engaging, game-like exploratory experience that is intuitive and memorable. The goal is integrated as the final step in the chronological journey. -->
+    <!-- Visualization & Content Choices: 
+        1. Life Path (HTML/CSS): Report Info -> Chronological life events. Goal -> Organize/Show Change. Viz -> A visual, winding path made with Tailwind CSS. Interaction -> User scrolls to navigate. Justification -> Creates an immersive journey, guiding the user through the story.
+        2. Milestone Cards (HTML/CSS): Report Info -> Each year's event. Goal -> Inform. Viz -> Interactive cards along the path. Interaction -> Click to open a modal with the event description. Justification -> Breaks down the story into digestible pieces and encourages engagement.
+        3. Goal Section (HTML/CSS): Report Info -> Future aspirations. Goal -> Inform/Inspire. Viz -> A prominent, final milestone. Interaction -> Part of the natural scroll flow. Justification -> Provides a clear conclusion to the life story and connects directly to the 22-year journey.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #FDFCF8;
+            color: #383838;
+        }
+        h1, h2, h3, .kaisei-font {
+            font-family: 'Kaisei Decol', serif;
+        }
+        .path-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            background-color: #E0E7FF;
+            z-index: -1;
+        }
+        .milestone-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .milestone-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1);
+        }
+        .modal-backdrop {
+            transition: opacity 0.3s ease-in-out;
+        }
+        .modal-content {
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="text-center py-8 md:py-12 bg-white/50 backdrop-blur-sm sticky top-0 z-20">
+        <h1 class="text-3xl md:text-5xl font-bold text-indigo-800 kaisei-font">人生すごろく</h1>
+        <p class="text-lg md:text-xl text-gray-600 mt-2">〜 土師野隆之介、挑戦と笑いの22年 〜</p>
+    </header>
+
+    <main class="container mx-auto px-4 py-12">
+        <section id="intro" class="text-center max-w-3xl mx-auto mb-16">
+            <h2 class="text-2xl font-bold text-indigo-700 mb-4 kaisei-font">はじめに</h2>
+            <p class="text-gray-700 leading-relaxed">
+                こんにちは、土師野隆之介です。僕がどんな人間なのかを伝えるために、生まれてから今までの22年間を「人生すごろく」として表現しました。一つ一つのマスには、僕を形作った挑戦、学び、そして少しの笑いが詰まっています。どうぞ、サイコロを振るような気持ちで、僕の歩んできた道のりを覗いてみてください。
+            </p>
+        </section>
+
+        <div id="sugoroku-board" class="relative path-container py-8">
+        </div>
+
+    </main>
+
+    <footer class="bg-indigo-800 text-white text-center py-8">
+        <p class="text-sm text-indigo-200">© 2025 Ryunosuke Hashino. All rights reserved.</p>
+    </footer>
+    
+    <div id="modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none">
+        <div id="modal-content" class="modal-content bg-white rounded-lg shadow-xl w-full max-w-md p-6 text-center transform scale-95 opacity-0">
+            <p id="modal-age" class="text-3xl font-bold text-indigo-600 kaisei-font mb-2"></p>
+            <p id="modal-text" class="text-gray-700 leading-relaxed"></p>
+            <button id="close-modal" class="mt-6 bg-indigo-600 text-white font-bold py-2 px-6 rounded-full hover:bg-indigo-700 transition-colors">閉じる</button>
+        </div>
+    </div>
+
+    <script>
+        const lifeEvents = [
+            { chapter: "芸能界での幕開け", age: "0歳", text: "熊本にて誕生。生後10ヶ月で芸能事務所入り。土師野隆之介、爆誕！", icon: "🎬" },
+            { age: "1歳", text: "おむつのCMで芸能界デビュー。ギャラよりもミルクが優先。", icon: "🍼" },
+            { age: "2歳", text: "自由奔放な姉に強く育てられ、精神力がつく。", icon: "👧" },
+            { age: "3歳", text: "ドラマ『白夜行』に出演。弟も生まれ、人生の共演者が増える。", icon: "👦" },
+            { age: "4歳", text: "「イヤ！」期突入。人生で唯一、全力で大人に逆らった一年。", icon: "🙅" },
+            { age: "5歳", text: "幼稚園のサッカークラブでエース気取り。将来はバロンドール？", icon: "⚽" },
+            { age: "6歳", text: "人生最初にして最大のモテ期到来。クラスの全女子の初恋を奪う。", icon: "💖" },
+            { age: "7歳", text: "映画主演と空手全国準優勝。武芸の道極まれり。", icon: "🥋" },
+            { age: "8歳", text: "映画キャンペーンで全国行脚。出席日数は少ないが、経験値は満タン。", icon: "✈️" },
+            { chapter: "学びと挑戦", age: "9歳", text: "給食当番の帽子を忘れ、嘘でごまかしてバレる。誠実さを学ぶ。", icon: "🤥" },
+            { age: "10歳", text: "アナ雪を大熱唱し、みんなの人気者に！", icon: "🎤" },
+            { age: "11歳", text: "ドラマや映画など、引っ張りだこの日々。予定帳がマネージャーと被るレベル。", icon: "🗓️" },
+            { age: "12歳", text: "中学受験のため俳優業を一時封印。文武芸の「文」強化月間へ。", icon: "📚" },
+            { age: "13歳", text: "慶應中等部入学。「一番苦手」を選んでサッカー部へ。", icon: "🥅" },
+            { age: "14歳", text: "頭が良いというアイデンティティを喪失。読書に逃げて、知識の沼にハマる。", icon: "📖" },
+            { age: "15歳", text: "音楽祭で漫才に挑戦し爆死。滑って学ぶ、人の笑いの難しさ。", icon: "😂" },
+            { chapter: "自己探求と葛藤", age: "16歳", text: "慶應義塾湘南藤沢高等部入学。一瞬系音楽部に入るが、楽しさが忘れられずに再びサッカー部へ。", icon: "🔄" },
+            { age: "17歳", text: "サッカー部で大一番で敗北。悔しさから努力マシーンに変身。ギアが入る。", icon: "⚙️" },
+            { age: "18歳", text: "主演映画の舞台挨拶と引退試合が被り、出場を断念。人生で初めての大きな挫折。", icon: "💔" },
+            { chapter: "新たな道へ", age: "19歳", text: "大学生活が開幕。学業・バイト・サークル三刀流の本格稼働。", icon: "⚔️" },
+            { age: "20歳", text: "ノルウェーへ留学。「幸せって何？」を探しに行ったら、オーロラに出会った。", icon: "🌌" },
+            { age: "21歳", text: "休学してまた三刀流（俳優・インターン・パーソナルトレーナー）修行へ。経験がバキバキに。", icon: "💪" },
+            { age: "22歳", text: "電通から内定。全ての経験が、線ではなく面になった瞬間。", icon: "💡" },
+            { type: "goal", text: "週末は子どもと公園でピクニックするような、あたたかな家庭を築く。\n社会に必要とされ、自分も納得できる価値を創出する仕事をする。", icon: "🎯" }
+        ];
+
+        const board = document.getElementById('sugoroku-board');
+        let currentChapter = "";
+
+        lifeEvents.forEach((event, index) => {
+            if (event.chapter && event.chapter !== currentChapter) {
+                currentChapter = event.chapter;
+                const chapterDiv = document.createElement('div');
+                chapterDiv.className = 'flex justify-center my-8';
+                chapterDiv.innerHTML = `<h3 class="kaisei-font text-xl md:text-2xl font-bold bg-indigo-100 text-indigo-800 py-2 px-6 rounded-full shadow-sm">${currentChapter}</h3>`;
+                board.appendChild(chapterDiv);
+            }
+
+            if (event.type === "goal") {
+                const goalDiv = document.createElement('div');
+                goalDiv.className = `flex justify-center my-16`;
+                goalDiv.innerHTML = `
+                    <div class="milestone-card w-full max-w-2xl p-8 rounded-lg shadow-xl bg-indigo-600 text-white text-center">
+                        <div class="text-5xl mb-4">${event.icon}</div>
+                        <h2 class="text-3xl font-bold kaisei-font mb-4">🎯 ゴール</h2>
+                        <p class="text-lg leading-relaxed whitespace-pre-wrap">${event.text}</p>
+                    </div>
+                `;
+                board.appendChild(goalDiv);
+            } else {
+                const isOdd = index % 2 !== 0;
+                const milestoneWrapper = document.createElement('div');
+                milestoneWrapper.className = `flex items-center my-4 ${isOdd ? 'justify-start' : 'justify-end'}`;
+
+                const card = document.createElement('div');
+                card.className = `milestone-card cursor-pointer w-full md:w-5/12 p-5 rounded-lg shadow-lg bg-white border border-gray-200`;
+                card.innerHTML = `
+                    <div class="flex items-center">
+                        <div class="text-3xl mr-4">${event.icon}</div>
+                        <div>
+                            <p class="text-xl font-bold text-indigo-700 kaisei-font">${event.age}</p>
+                            <p class="text-gray-600 text-sm md:text-base">${event.text}</p>
+                        </div>
+                    </div>
+                `;
+                
+                card.addEventListener('click', () => openModal(event.age, event.text));
+                milestoneWrapper.appendChild(card);
+                board.appendChild(milestoneWrapper);
+            }
+        });
+
+        const modal = document.getElementById('modal');
+        const modalContent = document.getElementById('modal-content');
+        const modalAge = document.getElementById('modal-age');
+        const modalText = document.getElementById('modal-text');
+        const closeModalBtn = document.getElementById('close-modal');
+
+        function openModal(age, text) {
+            modalAge.textContent = age;
+            modalText.textContent = text;
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modalContent.classList.remove('scale-95', 'opacity-0');
+        }
+
+        function closeModal() {
+            modal.classList.add('opacity-0');
+            modalContent.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('pointer-events-none');
+            }, 300);
+        }
+
+        closeModalBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
